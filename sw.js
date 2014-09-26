@@ -19,11 +19,11 @@ function initDb() {
 initDb();
 
 this.addEventListener('install', function(e) {
-  console.log("I am a Service Worker and I have been installed");
+  console.log("Service Worker installed.");
 });
 
 this.addEventListener('activate', function(e) {
-  console.log("I am a Service Worker and I have been activated");
+  console.log("Service Worker activated.");
 });
 
 // Resolves with the first promise that resolves, or rejects if all 
@@ -92,14 +92,14 @@ this.addEventListener('fetch', function(event) {
         resolve(reader.result);
       }
       reader.onerror = function(event) {
-        console.log("Could not read from blob in database");
+        console.log("Could not read from blob in database.");
         console.log(event);
         reject(event);
       }
       reader.readAsText(readRequest.result.response);
     };
     readRequest.onerror = function(event) {
-      console.log("Could not read from database");
+      console.log("Could not read from database.");
       console.log(event);
       reject(event);
     };
@@ -117,7 +117,7 @@ this.addEventListener('fetch', function(event) {
       responseCopy.blob().then(function(blob) {
         if (blob.size == 0) {
           console.log('blob size is 0 for ' + url + ". Probably a cross-site " +
-            "request, which we can't store in indexedDB. aborting.");
+            "request, which we can't store in indexedDB. Aborting.");
           return;
         }
         var addOperation = db.transaction(["requests"], "readwrite")
