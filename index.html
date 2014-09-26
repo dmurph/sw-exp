@@ -1,20 +1,83 @@
 <!DOCTYPE html>
 <html>
   <head>
+  <style>
+    #content {
+      margin: 0 0 0 300px;
+      padding: 5px;
+    }
+    #middle {
+      float: left;
+      width: 100%;
+    }
+    #lside {
+      float: left;
+      margin-left: -100%;
+      width: 300px;
+      border-right: solid 1px black;
+    }
+    #js-log {
+      min-height: 300px;
+      max-height: 800px;
+      width: 95%;
+      overflow-y: auto;
+      color: white;
+      background: black;
+      font-family: monospace;
+      line-height: 150%;
+      font-size: 12px;
+      padding: 7px;
+      padding-right: 0px;
+    }
+    #frame {
+      width: 100%;
+      height: 800px;
+      overflow-y: auto;
+    }
+  </style>
   </head>
   <body>
-  <div style="max-width: 700px; margin: 0 auto 0 auto;">
-    <button id="swinstall">Install Service Worker</button>
-    <button id="iframe">Load Controlled Frame</button>
-    <div id="js-log" style="height: 200px; overflow: scroll; color: white; background: black; font-family: monospace; line-height: 150%; font-size: 12px; padding: 7px;"></div>
-    <iframe id='frame' />
+  <div style="margin: 0 auto 0 auto;">
+    <div id="wrapper">
+      <div id="middle">
+        <div id="content">
+          <iframe id="frame"></iframe>
+        </div>
+      </div>
+      <div id="lside">
+        <button id="swinstall">Install Service Worker</button>
+        <button id="iframeload">Load Frame</button>
+        <button id="iframeunload">Unload Frame</button>
+        <p>chrome://serviceworker-internals/</p>
+        <div id="log-wrapper">
+          <div><b>&nbsp;&nbsp;Wrapper Page Log</b></div>
+          <div id="js-log"> </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script>
 
     function log() {
       var el = document.createElement('div');
-      el.innerHTML = Array.prototype.join.call(arguments, '<br />');
+      el.innerHTML = Array.prototype.join.call(
+        Array.prototype.map.call(arguments, function(x) { return "> " + x; }),
+        '<br />');
       document.getElementById('js-log').appendChild(el);
+    }
+
+    function installSw(path, scope) {
+      log('About to try to install a Service Worker');
+      navigator.serviceWorker.register(path, scope)
+        .then(function(serviceWorker) {
+          log('Successfully installed ServiceWorker');
+          log('Go to chrome://serviceworker-internals/ to see Service Worker debug output');
+          serviceWorker.addEventListener('statechange', function(event) {
+            log("Worker state is now "+event.target.state);
+          });
+        }, function(why) {
+          log('Failed to install:' + why);
+        });
     }
 
     if (navigator.serviceWorker) {
@@ -27,17 +90,20 @@
       }
 
       document.getElementById('swinstall').addEventListener('click', function() {
-        log('About to try to install a Service Worker');
-        navigator.serviceWorker.register('./sw.js')
-          .then(function(serviceWorker) {
-            log('Successfully installed ServiceWorker');
-            log('Go to chrome://serviceworker-internals/ to see Service Worker debug output');
-            serviceWorker.addEventListener('statechange', function(event) {
-              log("Worker state is now "+event.target.state);
-            });
-          }, function(why) {
-            log('Failed to install:' + why);
-          });
+        installSw('/sw.js', { scope: '/content.html' });
+      });
+
+      
+
+      document.getElementById('iframeload').addEventListener('click', function() {
+        log("Loading content.html in iframe.");
+        var frame = document.getElementById('frame');
+        frame.src = "/content.html";
+      });
+      document.getElementById('iframeunload').addEventListener('click', function() {
+        log("Loading content.html in iframe.");
+        var frame = document.getElementById('frame');
+        frame.src = "";
       });
     } else {
       log("Browser does not support Service Worker, are you using Chrome Canary?  Is the Service Worker flag switched on? chrome://flags/#enable-service-worker");

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <style>
+    #middlepadding {
+      margin: 0 300px 0 0px;
+      padding: 5px;
+    }
+    #middle {
+      float: right;
+      width: 100%;
+    }
+    #rside {
+      float: right;
+      margin-right: -100%;
+      width: 300px;
+      padding-left: 5px;
+      border-left: solid 1px black;
+    }
+    #js-log {
+      min-height: 300px;
+      max-height: 800px;
+      width: 95%;
+      overflow-y: scroll;
+      color: white;
+      background: black;
+      font-family: monospace;
+      line-height: 150%;
+      font-size: 12px;
+      padding: 7px;
+      padding-right: 0px;
+    }
+  </style>
+  </head>
+  <body>
+  <div style="margin: 0 auto 0 auto;">
+    <div id="wrapper">
+      <div id="middle">
+        <div id="middlepadding">
+          <div id="content">
+            <div id="response"> </div>
+            <div id="genresponse"> </div>
+          </div>
+        </div>
+      </div>
+      <div id="rside">
+        <button id="fetch">Fetch Resources</button>
+        <div id="log-wrapper">
+          <div><b>&nbsp;&nbsp;Wrapped Page Log</b></div>
+          <div id="js-log"> </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function fetch_url(url) {
+      return new Promise(function(resolve, reject) {
+        var request = new XMLHttpRequest();
+        request.addEventListener('load', function(event) {
+          if (request.status == 200)
+            resolve(request.response);
+          else
+            reject(Error(request.statusText));
+        });
+        request.open('GET', url, true);
+        request.send();
+      });
+    }
+
+    function external_response(html, element) {
+      console.log("External response gotten");
+      document.getElementById(element).innerHTML = html;
+    }
+
+    function log() {
+      var el = document.createElement('div');
+      el.innerHTML = Array.prototype.join.call(arguments, '<br />');
+      document.getElementById('js-log').appendChild(el);
+    }
+
+    if (navigator.serviceWorker) {
+      log("Browser supports Service Worker");
+      if (navigator.serviceWorker.current) {
+        log("Current Service Worker state: \\o/");
+        log('Go to chrome://serviceworker-internals/ to see Service Worker debug output');
+      } else {
+        log("No Service Worker active...");
+      }
+      document.getElementById('fetch').addEventListener('click', function() {
+        log('About to fetch information');
+        fetch_url("/external_data").then(function(content) {
+          external_response(content, 'response');
+        }, function(error) {
+          console.log(error);
+        });
+        fetch_url("/gen_data").then(function(content) {
+          external_response(content, 'genresponse');
+        }, function(error) {
+          console.log(error);
+        });
+      });
+    } else {
+      log("Browser does not support Service Worker, are you using Chrome Canary?  Is the Service Worker flag switched on? chrome://flags/#enable-service-worker");
+    }
+  </script>
+  </body>
+</html>
