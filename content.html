@@ -62,24 +62,28 @@
           else
             reject(Error(request.statusText));
         });
+        request.addEventListener('error', function(event) {
+          reject(event);
+        });
         request.open('GET', url, true);
         request.send();
       });
     }
 
     function external_response(html, element) {
-      console.log("External response gotten");
       document.getElementById(element).innerHTML = html;
     }
 
     function log() {
       var el = document.createElement('div');
-      el.innerHTML = Array.prototype.join.call(arguments, '<br />');
+      el.innerHTML = Array.prototype.join.call(
+        Array.prototype.map.call(arguments, function(x) { return "> " + x; }),
+        '<br />');
       document.getElementById('js-log').appendChild(el);
     }
 
     if (navigator.serviceWorker) {
-      log("Browser supports Service Worker");
+      log("Browser supports Service Worker.");
       if (navigator.serviceWorker.current) {
         log("Current Service Worker state: \\o/");
         log('Go to chrome://serviceworker-internals/ to see Service Worker debug output');
@@ -87,16 +91,18 @@
         log("No Service Worker active...");
       }
       document.getElementById('fetch').addEventListener('click', function() {
-        log('About to fetch information');
+        log('Fetching information.');
         fetch_url("/external_data").then(function(content) {
           external_response(content, 'response');
         }, function(error) {
           console.log(error);
+          log('Could not load resource: /external_data');
         });
         fetch_url("/gen_data").then(function(content) {
           external_response(content, 'genresponse');
         }, function(error) {
           console.log(error);
+          log('Could not load resource: /genresponse');
         });
       });
     } else {

@@ -1,7 +1,7 @@
 console.log("I am a Service Worker");
 
 var db;
-var version = 4.0;
+var version = 6.0;
 
 function initDb() {
   var request = indexedDB.open("TestDatabaseV" + version);
@@ -37,22 +37,24 @@ function raceSucceed(promises) {
     var drop = false;
     var errors = [];
     for (var i = 0; i < promises.length; i++) {
-      var curr = i;
-      promises[i].then(function(result) {
-        if (!drop && errors[curr] == undefined) {
-          console.log("Promise " + curr + " won!");
-          drop = true;
-          resolve(result);
-        }
-      }, function(error) {
-        console.log("Promise " + curr + " had an error!");
-        console.log(error);
-        errors[curr] = error;
-        promisesThrown += 1;
-        if (promisesThrown == promises.length) {
-          reject(errors);
-        }
-      });
+      (function(i) {
+        promises[i].then(function(result) {
+          if (!drop && errors[i] == undefined) {
+            console.log("Promise " + i + " won!");
+            drop = true;
+            resolve(result);
+          }
+        }, function(error) {
+          console.log("Promise " + i + " had an error!");
+          console.log(error);
+          errors[i] = error;
+          promisesThrown += 1;
+          if (promisesThrown == promises.length) {
+            console.log("All rejected.");
+            reject(errors);
+          }
+        });
+      }(i));
     }
   });
 }
@@ -115,26 +117,26 @@ this.addEventListener('fetch', function(event) {
       // body contents.
       var responseCopy = response.clone();
       responseCopy.blob().then(function(blob) {
-        if (blob.size == 0) {
-          console.log('blob size is 0 for ' + url + ". Probably a cross-site " +
-            "request, which we can't store in indexedDB. Aborting.");
-          return;
-        }
-        var addOperation = db.transaction(["requests"], "readwrite")
-            .objectStore("requests")
-            .put({request: url, response: blob, time: Date.now()});
-        console.log("Storing url: " + url);
-        addOperation.onsuccess = function(evt) {
-          console.log('Stored successfully!');
-        };
-        addOperation.onerror = function(evt) {
-          console.log("Store operation error!");
-          console.log(evt);
-        };
-      }).catch(function(rej) {
-        console.log("Error storing response");
-        console.log(rej);
-      });
+          if (blob.size == 0) {
+            console.log('blob size is 0 for ' + url + ". Probably a cross-site " +
+              "request, which we can't store in indexedDB. Aborting.");
+            return;
+          }
+          console.log("Storing url: " + url);
+          var addOperation = db.transaction(["requests"], "readwrite")
+              .objectStore("requests")
+              .put({request: url, response: blob, time: Date.now()});
+          addOperation.onsuccess = function(evt) {
+            console.log('Stored successfully!');
+          };
+          addOperation.onerror = function(evt) {
+            console.log("Store operation error!");
+            console.log(evt);
+          };
+        }).catch(function(rej) {
+          console.log("Error storing response");
+          console.log(rej);
+        });
       return response;
     });
 
