@@ -90,7 +90,7 @@
       }
 
       document.getElementById('swinstall').addEventListener('click', function() {
-        installSw('/sw.js', { scope: '/content.html' });
+        installSw('sw.js', { scope: '/content.html' });
       });
 
       
@@ -98,7 +98,7 @@
       document.getElementById('iframeload').addEventListener('click', function() {
         log("Loading content.html in iframe.");
         var frame = document.getElementById('frame');
-        frame.src = "/content.html";
+        frame.src = "content.html";
       });
       document.getElementById('iframeunload').addEventListener('click', function() {
         log("Loading content.html in iframe.");
