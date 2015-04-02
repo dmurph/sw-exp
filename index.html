@@ -90,10 +90,8 @@
       }
 
       document.getElementById('swinstall').addEventListener('click', function() {
-        installSw('sw.js', { scope: '/content.html' });
+        installSw('sw.js', { scope: 'content.html' });
       });
-
-      
 
       document.getElementById('iframeload').addEventListener('click', function() {
         log("Loading content.html in iframe.");
